@@ -1,6 +1,10 @@
+using NUnit.Framework;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Sygenap {
     public class Sygenap : MonoBehaviour
@@ -18,6 +22,10 @@ namespace Sygenap {
 
         public string gameName;
 
+        public List<Parcel> parcels = new List<Parcel>();
+
+        public static float POV_REACH = 50f; //Limit inside which Parcels are displayed (and generated if necessary) and outside which Parcels are hidden. In meters.
+        public static float POV_REFRESH_FREQUENCY = 5f; //In seconds
         private POV _pov;
         public POV pov
         {
@@ -34,7 +42,11 @@ namespace Sygenap {
             {
                 if (this.randomSeed)
                     this._seed = Random.Range(int.MinValue, int.MaxValue);
+
+                this.spawnPOV(Vector3.zero, Quaternion.identity);
             }
+
+            StartCoroutine(this.r_handlePov());
         }
 
         // Update is called once per frame
@@ -42,6 +54,111 @@ namespace Sygenap {
         {
 
         }
+
+        public Parcel getParcelAt(Vector2Int coordinates)
+        {
+            foreach (Parcel parcel in this.parcels)
+            {
+                if(parcel.x == coordinates.x && parcel.y == coordinates.y)
+                {
+                    return parcel;
+                }
+            }
+            return null;
+        }
+
+        public Parcel getParcelAt(Vector3 position)
+        {
+            foreach (Parcel parcel in this.parcels)
+            {
+                Vector3 origin = parcel.getOrigin();
+
+                if (
+                    origin.x < position.x && position.x <= origin.x + Parcel.WIDTH
+                    && origin.z < position.z && position.z <= origin.z + Parcel.WIDTH
+                )
+                {
+                    return parcel;
+                }
+            }
+            return null;
+        }
+
+        /*
+         * POV SYSTEM
+         */
+
+        public Vector2Int getPovCoordinates()
+        {
+            return new Vector2Int(
+                Mathf.FloorToInt(this.pov.transform.position.x / Parcel.WIDTH),
+                Mathf.FloorToInt(this.pov.transform.position.z / Parcel.WIDTH)
+            );
+        }
+
+        private IEnumerator r_handlePov()
+        {
+            bool continued = true;
+            while (continued)
+            {
+                Vector2Int povCoordinates = this.getPovCoordinates();
+
+                List<Parcel> shouldStayDisplayed = new List<Parcel>();
+
+                int reachInParcels = Mathf.CeilToInt(Sygenap.POV_REACH / Parcel.WIDTH);
+                for(int x = povCoordinates.x - reachInParcels; x < povCoordinates.x + reachInParcels; x++)
+                {
+                    for (int y = povCoordinates.y - reachInParcels; y < povCoordinates.y + reachInParcels; y++)
+                    {
+                        Parcel parcelInReach = this.getParcelAt(new Vector2Int(x, y));
+                        
+                        if (parcelInReach != null)
+                        {
+
+                        }
+                        else
+                        {
+                            parcelInReach = this.displayParcelAt(x, y);
+                            parcelInReach.display();
+                        }
+
+                        shouldStayDisplayed.Add(parcelInReach);
+                    }
+                }
+
+                List<Parcel> shouldHide = new List<Parcel>();
+                foreach (Parcel parcel in this.parcels)
+                {
+                    if (parcel.status != Parcel.STATUS.HIDING && !shouldStayDisplayed.Contains(parcel))
+                    {
+                        shouldHide.Add(parcel);
+                    }
+                }
+
+                foreach (Parcel parcel in shouldHide)
+                {
+                    parcel.hide();
+                }
+
+                yield return new WaitForSeconds(Sygenap.POV_REFRESH_FREQUENCY);
+            }
+        }
+
+        private Parcel displayParcelAt(int x, int y)
+        {
+            GameObject parcelObj = new GameObject("Parcel"+x+"-"+y);
+            parcelObj.transform.position = new Vector3(x*Parcel.WIDTH, 0f, y*Parcel.WIDTH);
+
+            Parcel parcel = parcelObj.AddComponent<Parcel>();
+            parcel.init(this, x, y);
+
+            this.parcels.Add(parcel);
+            return parcel;
+        }
+
+        /*
+         * SAVING SYSTEM
+         */
 
         public string getSaveFileURI()
         {

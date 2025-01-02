@@ -1,3 +1,4 @@
+using System.Collections;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
@@ -6,13 +7,25 @@ namespace Sygenap
 {
     public class Parcel : MonoBehaviour
     {
+        public static float WIDTH = 10f;
+
         public Sygenap root;
 
-        private int _x;
+        private int _x; //Coordinate in X times WIDTH
         public int x { get { return _x; } }
 
-        private int _y;
+        private int _y; //Coordinate in Y times WIDTH
         public int y { get { return _y; } }
+
+        public enum STATUS
+        {
+            GENERATING,
+            DISPLAYING,
+            DISPLAYED,
+            HIDING
+        }
+        private STATUS _status = STATUS.DISPLAYED;
+        public STATUS status { get { return _status; } }
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
@@ -33,9 +46,61 @@ namespace Sygenap
 
         }
 
+        public Vector3 getOrigin()
+        {
+            return new Vector3(
+                this._x * Parcel.WIDTH,
+                0f,
+                this._y * Parcel.WIDTH
+            );
+        }
+
+        /*
+         * POV SYSTEM
+         */
+
+        public void display()
+        {
+            StartCoroutine(this.r_display());
+        }
+        private IEnumerator r_display()
+        {
+            if (File.Exists(this.getSaveFileURI()))
+            {
+                this._status = STATUS.DISPLAYING;
+                yield return null;
+            }
+            else
+            {
+                this._status = STATUS.GENERATING;
+                yield return null;
+            }
+
+            this._status = STATUS.DISPLAYED;
+        }
+
+        public void hide()
+        {
+            StartCoroutine(this.r_hide());
+        }
+        private IEnumerator r_hide()
+        {
+            this._status = STATUS.HIDING;
+            yield return null;
+        }
+
+        /*
+         * SAVING SYSTEM
+         */
+
+        public string getSaveFileURI()
+        {
+            return this.root.getSaveFileURI() + "-" + this._x + "-" + this._y;
+        }
+
         public void save()
         {
-            string destination = Application.persistentDataPath + "/" + this.root.gameName + "/" + this._x + "-" + this._y;
+            string destination = this.getSaveFileURI();
             FileStream file;
 
             if (File.Exists(destination)) file = File.OpenWrite(destination);
@@ -50,7 +115,7 @@ namespace Sygenap
 
         public void load()
         {
-            string destination = Application.persistentDataPath + "/" + this.root.gameName + "/" + this._x + "-" + this._y;
+            string destination = this.getSaveFileURI();
             FileStream file;
 
             if (File.Exists(destination)) file = File.OpenRead(destination);
