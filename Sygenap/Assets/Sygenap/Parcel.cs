@@ -2,12 +2,14 @@ using System.Collections;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Sygenap
 {
     public class Parcel : MonoBehaviour
     {
         public static float WIDTH = 10f;
+        public static float MAX_HEIGHT = 5f;
 
         public Sygenap root;
 
@@ -26,6 +28,10 @@ namespace Sygenap
         }
         private STATUS _status = STATUS.DISPLAYED;
         public STATUS status { get { return _status; } }
+
+        private Terrain _terrain;
+        private float[,] _terrainHeights;
+        private TerrainCollider _collider;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
@@ -55,28 +61,88 @@ namespace Sygenap
             );
         }
 
+        private void logStatus()
+        {
+            Debug.Log("Parcel "+this._x+", "+this._y+" - "+this.status);
+        }
+
         /*
          * POV SYSTEM
          */
 
         public void display()
         {
-            StartCoroutine(this.r_display());
+            StartCoroutine(this.r_startDisplay());
         }
-        private IEnumerator r_display()
+        private IEnumerator r_startDisplay()
         {
-            if (File.Exists(this.getSaveFileURI()))
+            if (!File.Exists(this.getSaveFileURI()))
             {
+                this._status = STATUS.GENERATING;
+                this.logStatus();
+                yield return StartCoroutine(this.r_generate());
+
                 this._status = STATUS.DISPLAYING;
-                yield return null;
+                this.logStatus();
+                yield return StartCoroutine(this.r_display());
+
+                this._status = STATUS.DISPLAYED;
+                this.logStatus();
+
+                this.save();
             }
             else
             {
-                this._status = STATUS.GENERATING;
+                this.load();
+
+                this._status = STATUS.DISPLAYING;
+                this.logStatus();
+                yield return StartCoroutine(this.r_display());
+
+                this._status = STATUS.DISPLAYED;
+                this.logStatus();
+            }
+        }
+
+        private IEnumerator r_display()
+        {
+            this._terrain = this.gameObject.AddComponent<Terrain>();
+            this._terrain.materialTemplate = this.root.terrainMaterial;
+            this._terrain.materialType = Terrain.MaterialType.Custom;
+
+            _terrain.terrainData = new TerrainData();
+            _terrain.terrainData.size = new Vector3(Parcel.WIDTH, Parcel.MAX_HEIGHT, Parcel.WIDTH);
+            _terrain.terrainData.SetHeights(0, 0, this._terrainHeights);
+
+            this._collider = this.gameObject.AddComponent<TerrainCollider>();
+            this._collider.terrainData = _terrain.terrainData;
+
+            yield return null;
+        }
+
+        private IEnumerator r_generate()
+        {
+            //int heightsArrayDimension = Mathf.RoundToInt(Parcel.WIDTH * 512);
+            int heightsArrayDimension = 33;
+            this._terrainHeights = new float[heightsArrayDimension, heightsArrayDimension];
+
+            //Generate noise on terrain
+            float noiseGenerationPercent = 0f;
+            for (int x = 0; x < heightsArrayDimension; x++)
+            {
+                for (int z = 0; z < heightsArrayDimension; z++)
+                {
+                    float heightValue = 0f;
+
+                    heightValue = Mathf.PerlinNoise(x / (heightsArrayDimension * 1f), z / (heightsArrayDimension * 1f)); //TODO using max noise height + parcel offset in world + zoom on perlin noise + offset from seed
+
+                    this._terrainHeights[z, x] = heightValue;
+                    noiseGenerationPercent = ((x*heightsArrayDimension)+z) / (heightsArrayDimension * heightsArrayDimension * 1f);
+                }
+
+                Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
                 yield return null;
             }
-
-            this._status = STATUS.DISPLAYED;
         }
 
         public void hide()
@@ -86,7 +152,11 @@ namespace Sygenap
         private IEnumerator r_hide()
         {
             this._status = STATUS.HIDING;
+            this.root.parcels.Remove(this);
+
             yield return null;
+
+            Destroy(this.gameObject);
         }
 
         /*
@@ -95,7 +165,7 @@ namespace Sygenap
 
         public string getSaveFileURI()
         {
-            return this.root.getSaveFileURI() + "-" + this._x + "-" + this._y;
+            return this.root.getSaveFileDirectory() + this._x + "-" + this._y;
         }
 
         public void save()
@@ -106,7 +176,7 @@ namespace Sygenap
             if (File.Exists(destination)) file = File.OpenWrite(destination);
             else file = File.Create(destination);
 
-            ParcelData data = new ParcelData(this._x, this._y);
+            ParcelData data = new ParcelData(this._x, this._y, this._terrainHeights);
 
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(file, data);
@@ -128,6 +198,10 @@ namespace Sygenap
             BinaryFormatter bf = new BinaryFormatter();
             ParcelData data = (ParcelData)bf.Deserialize(file);
             file.Close();
+
+            this._x = data.x;
+            this._y = data.y;
+            this._terrainHeights = data.heights;
         }
     }
 
@@ -137,9 +211,13 @@ namespace Sygenap
         public int x;
         public int y;
 
-        public ParcelData(int x, int y) {
+        public float[,] heights;
+
+        public ParcelData(int x, int y, float[,] heights) {
             this.x = x;
             this.y = y;
+
+            this.heights = heights;
         }
     }
 }

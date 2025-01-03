@@ -25,7 +25,7 @@ namespace Sygenap {
         public List<Parcel> parcels = new List<Parcel>();
 
         public static float POV_REACH = 50f; //Limit inside which Parcels are displayed (and generated if necessary) and outside which Parcels are hidden. In meters.
-        public static float POV_REFRESH_FREQUENCY = 5f; //In seconds
+        public static float POV_REFRESH_FREQUENCY = 1f; //In seconds
         private POV _pov;
         public POV pov
         {
@@ -33,13 +33,26 @@ namespace Sygenap {
         }
         public GameObject povPrefab;
 
+        public Material terrainMaterial;
+
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
+            Debug.Log("======");
+            Debug.Log("SYGENAP");
+            Debug.Log("Current game: "+this.getSaveFileURI());
+            Debug.Log("======");
+
             if (File.Exists(this.getSaveFileURI()))
+            {
+                Debug.Log("Loading level... "+this.getSaveFileDirectory());
                 this.loadLevel();
+            }
             else
             {
+                Debug.Log("Creating level... " + this.getSaveFileDirectory());
+                Directory.CreateDirectory(this.getSaveFileDirectory());
+
                 if (this.randomSeed)
                     this._seed = Random.Range(int.MinValue, int.MaxValue);
 
@@ -85,6 +98,14 @@ namespace Sygenap {
         }
 
         /*
+         * Gives a pseudo-random value between 0f and 1f (always gives the same value with the same seed)
+         */
+        public static float random(int seed, float pseudoRandom)
+        {
+            return Mathf.Abs(seed / pseudoRandom) / Mathf.Abs(seed);
+        }
+
+        /*
          * POV SYSTEM
          */
 
@@ -123,6 +144,7 @@ namespace Sygenap {
                         }
 
                         shouldStayDisplayed.Add(parcelInReach);
+                        yield return null;
                     }
                 }
 
@@ -160,6 +182,12 @@ namespace Sygenap {
          * SAVING SYSTEM
          */
 
+
+        public string getSaveFileDirectory()
+        {
+            return Application.persistentDataPath + "/" + this.gameName + "/";
+        }
+        
         public string getSaveFileURI()
         {
             return Application.persistentDataPath + "/" + this.gameName + "/." + this._seed;
@@ -205,7 +233,7 @@ namespace Sygenap {
             povObj.transform.position = position;
             povObj.transform.localRotation = rotation;
 
-            POV pov = povObj.AddComponent<POV>();
+            this._pov = povObj.AddComponent<POV>();
         }
     }
 
