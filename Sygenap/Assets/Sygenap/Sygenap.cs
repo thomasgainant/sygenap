@@ -25,15 +25,19 @@ namespace Sygenap {
 
         public bool saveParcelsOnGeneration = true;
 
+        public float PARCEL_WIDTH = 10f;
+        public float PARCEL_MAX_HEIGHT = 300f;
+        public float PARCEL_TERRAIN_NOISE_PERLIN_ZOOM = 0.03f;
+        public float PARCEL_TERRAIN_NOISE_MAX_HEIGHT = 3f; //Noise height, in meters
         public List<Parcel> parcels = new List<Parcel>();
 
-        public static int GENERATION_BUFFER_SIZE = 1;
-        public static float GENERATION_BUFFER_REFRESH_FREQUENCY = 10f; //In seconds
+        public int GENERATION_BUFFER_SIZE = 3;
+        public float GENERATION_BUFFER_REFRESH_FREQUENCY = 1f; //In seconds
         public List<Parcel> generationWaitingList = new List<Parcel>();
         public List<Parcel> generationBuffer = new List<Parcel>();
 
-        public static float POV_REACH = 50f; //Limit inside which Parcels are displayed (and generated if necessary) and outside which Parcels are hidden. In meters.
-        public static float POV_REFRESH_FREQUENCY = 1f; //In seconds
+        public float POV_REACH = 50f; //Limit inside which Parcels are displayed (and generated if necessary) and outside which Parcels are hidden. In meters.
+        public float POV_REFRESH_FREQUENCY = 1f; //In seconds
         private POV _pov;
         public POV pov
         {
@@ -98,8 +102,8 @@ namespace Sygenap {
                 Vector3 origin = parcel.getOrigin();
 
                 if (
-                    origin.x < position.x && position.x <= origin.x + Parcel.WIDTH
-                    && origin.z < position.z && position.z <= origin.z + Parcel.WIDTH
+                    origin.x < position.x && position.x <= origin.x + this.PARCEL_WIDTH
+                    && origin.z < position.z && position.z <= origin.z + this.PARCEL_WIDTH
                 )
                 {
                     return parcel;
@@ -124,8 +128,8 @@ namespace Sygenap {
         public Vector2Int getPovCoordinates()
         {
             return new Vector2Int(
-                Mathf.FloorToInt(this.pov.transform.position.x / Parcel.WIDTH),
-                Mathf.FloorToInt(this.pov.transform.position.z / Parcel.WIDTH)
+                Mathf.FloorToInt(this.pov.transform.position.x / this.PARCEL_WIDTH),
+                Mathf.FloorToInt(this.pov.transform.position.z / this.PARCEL_WIDTH)
             );
         }
 
@@ -138,7 +142,7 @@ namespace Sygenap {
 
                 List<Parcel> shouldStayDisplayed = new List<Parcel>();
 
-                int reachInParcels = Mathf.CeilToInt(Sygenap.POV_REACH / Parcel.WIDTH);
+                int reachInParcels = Mathf.CeilToInt(this.POV_REACH / this.PARCEL_WIDTH);
                 for(int x = povCoordinates.x - reachInParcels; x < povCoordinates.x + reachInParcels; x++)
                 {
                     for (int y = povCoordinates.y - reachInParcels; y < povCoordinates.y + reachInParcels; y++)
@@ -174,14 +178,14 @@ namespace Sygenap {
                     parcel.hide();
                 }
 
-                yield return new WaitForSeconds(Sygenap.POV_REFRESH_FREQUENCY);
+                yield return new WaitForSeconds(this.POV_REFRESH_FREQUENCY);
             }
         }
 
         private Parcel displayParcelAt(int x, int y)
         {
             GameObject parcelObj = new GameObject("Parcel"+x+"-"+y);
-            parcelObj.transform.position = new Vector3(x*Parcel.WIDTH, 0f, y*Parcel.WIDTH);
+            parcelObj.transform.position = new Vector3(x*this.PARCEL_WIDTH, 0f, y*this.PARCEL_WIDTH);
 
             Parcel parcel = parcelObj.AddComponent<Parcel>();
             parcel.init(this, x, y);
@@ -207,14 +211,14 @@ namespace Sygenap {
 
                 if (this.generationWaitingList.Count > 0)
                 {
-                    int maxNumberOfParcelToAdd = Sygenap.GENERATION_BUFFER_SIZE - this.generationBuffer.Count;
+                    int maxNumberOfParcelToAdd = this.GENERATION_BUFFER_SIZE - this.generationBuffer.Count;
                     if (maxNumberOfParcelToAdd > this.generationWaitingList.Count)
                         maxNumberOfParcelToAdd = this.generationWaitingList.Count;
                     List<Parcel> parcelsToGenerate = this.generationWaitingList.GetRange(0, maxNumberOfParcelToAdd);
                     this.generationBuffer.AddRange(parcelsToGenerate);
                 }
 
-                yield return new WaitForSeconds(Sygenap.GENERATION_BUFFER_REFRESH_FREQUENCY);
+                yield return new WaitForSeconds(this.GENERATION_BUFFER_REFRESH_FREQUENCY);
             }
         }
 

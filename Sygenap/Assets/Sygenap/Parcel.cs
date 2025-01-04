@@ -8,12 +8,6 @@ namespace Sygenap
 {
     public class Parcel : MonoBehaviour
     {
-        public static float WIDTH = 10f;
-        public static float MAX_HEIGHT = 5f;
-
-        public static float TERRAIN_NOISE_PERLIN_ZOOM = 0.03f;
-        public static float TERRAIN_NOISE_MAX_HEIGHT = 3f; //Noise height, in meters
-
         public Sygenap root;
 
         private int _x; //Coordinate in X times WIDTH
@@ -63,9 +57,9 @@ namespace Sygenap
         public Vector3 getOrigin()
         {
             return new Vector3(
-                this._x * Parcel.WIDTH,
+                this._x * this.root.PARCEL_WIDTH,
                 0f,
-                this._y * Parcel.WIDTH
+                this._y * this.root.PARCEL_WIDTH
             );
         }
 
@@ -128,7 +122,7 @@ namespace Sygenap
             this._terrain.materialType = Terrain.MaterialType.Custom;
 
             _terrain.terrainData = new TerrainData();
-            _terrain.terrainData.size = new Vector3(Parcel.WIDTH, Parcel.MAX_HEIGHT, Parcel.WIDTH);
+            _terrain.terrainData.size = new Vector3(this.root.PARCEL_WIDTH, this.root.PARCEL_MAX_HEIGHT, this.root.PARCEL_WIDTH);
             _terrain.terrainData.SetHeights(0, 0, this._terrainHeights);
 
             this._collider = this.gameObject.AddComponent<TerrainCollider>();
@@ -165,7 +159,7 @@ namespace Sygenap
             {
                 for (int pointZ = 0; pointZ < heightsArrayDimension; pointZ++)
                 {
-                    float heightValue = 0f;
+                    float noiseHeightValue = 0f;
 
                     Vector2 perlinCoordinates = new Vector2(
                         pointX / (heightsArrayDimension - 1f),
@@ -183,15 +177,15 @@ namespace Sygenap
                     perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
 
                     //zoom on perlin noise
-                    //perlinX *= Parcel.TERRAIN_NOISE_PERLIN_ZOOM;
-                    //perlinY *= Parcel.TERRAIN_NOISE_PERLIN_ZOOM;
+                    perlinCoordinates.x *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
+                    perlinCoordinates.y *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
 
-                    heightValue = Mathf.PerlinNoise(perlinCoordinates.x, perlinCoordinates.y);
+                    noiseHeightValue = Mathf.PerlinNoise(perlinCoordinates.x, perlinCoordinates.y);
 
                     //using max noise height
-                    //heightValue *= Parcel.TERRAIN_NOISE_MAX_HEIGHT/Parcel.MAX_HEIGHT;
+                    noiseHeightValue *= this.root.PARCEL_TERRAIN_NOISE_MAX_HEIGHT/this.root.PARCEL_MAX_HEIGHT;
 
-                    this._terrainHeights[pointZ, pointX] = heightValue;
+                    this._terrainHeights[pointZ, pointX] += noiseHeightValue;
                     noiseGenerationPercent = ((pointX*heightsArrayDimension)+pointZ) / (heightsArrayDimension * heightsArrayDimension * 1f);
                 }
 

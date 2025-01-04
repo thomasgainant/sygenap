@@ -589,8 +589,20 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 49a29f60982e4aa469cf73da468118d8, type: 2}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: GENERATION_BUFFER_SIZE
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: saveParcelsOnGeneration
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: PARCEL_TERRAIN_NOISE_PERLIN_ZOOM
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: GENERATION_BUFFER_REFRESH_FREQUENCY
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8425582911526314390, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: m_Name
