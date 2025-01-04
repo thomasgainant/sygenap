@@ -25,6 +25,11 @@ namespace Sygenap {
 
         public List<Parcel> parcels = new List<Parcel>();
 
+        public static int GENERATION_BUFFER_SIZE = 3;
+        public static float GENERATION_BUFFER_REFRESH_FREQUENCY = 1f; //In seconds
+        public List<Parcel> generationWaitingList = new List<Parcel>();
+        public List<Parcel> generationBuffer = new List<Parcel>();
+
         public static float POV_REACH = 50f; //Limit inside which Parcels are displayed (and generated if necessary) and outside which Parcels are hidden. In meters.
         public static float POV_REFRESH_FREQUENCY = 1f; //In seconds
         private POV _pov;
@@ -61,6 +66,7 @@ namespace Sygenap {
             }
 
             StartCoroutine(this.r_handlePov());
+            StartCoroutine(this.r_handleGenerationBuffer());
         }
 
         // Update is called once per frame
@@ -178,6 +184,34 @@ namespace Sygenap {
 
             this.parcels.Add(parcel);
             return parcel;
+        }
+
+        private IEnumerator r_handleGenerationBuffer()
+        {
+            bool continued = true;
+            while (continued)
+            {
+                if (this.generationBuffer.Count > 0)
+                {
+                    //Clean generation buffer by removing already generated Parcels
+                    foreach(Parcel parcel in this.generationBuffer.ToArray())
+                    {
+                        if (parcel.status != Parcel.STATUS.WAITING_FOR_GENERATION && parcel.status != Parcel.STATUS.GENERATING)
+                            this.generationBuffer.Remove(parcel);
+                    }
+                }
+
+                if (this.generationWaitingList.Count > 0)
+                {
+                    int maxNumberOfParcelToAdd = Sygenap.GENERATION_BUFFER_SIZE - this.generationBuffer.Count;
+                    if (maxNumberOfParcelToAdd > this.generationWaitingList.Count)
+                        maxNumberOfParcelToAdd = this.generationWaitingList.Count;
+                    List<Parcel> parcelsToGenerate = this.generationWaitingList.GetRange(0, maxNumberOfParcelToAdd);
+                    this.generationBuffer.AddRange(parcelsToGenerate);
+                }
+
+                yield return new WaitForSeconds(Sygenap.GENERATION_BUFFER_REFRESH_FREQUENCY);
+            }
         }
 
         /*

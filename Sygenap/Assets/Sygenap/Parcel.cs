@@ -24,13 +24,18 @@ namespace Sygenap
 
         public enum STATUS
         {
+            WAITING_FOR_GENERATION,
             GENERATING,
+            WAITING_FOR_DISPLAY,
             DISPLAYING,
             DISPLAYED,
             HIDING
         }
         private STATUS _status = STATUS.DISPLAYED;
         public STATUS status { get { return _status; } }
+
+        public static float GENERATION_BUFFER_FREQUENCY_CHECK = 2f;
+        private Coroutine generateAndOrDisplayProcess;
 
         private Terrain _terrain;
         private float[,] _terrainHeights;
@@ -75,17 +80,20 @@ namespace Sygenap
 
         public void display()
         {
-            StartCoroutine(this.r_startDisplay());
+            if (this.generateAndOrDisplayProcess != null)
+                return;
+
+            this.generateAndOrDisplayProcess = StartCoroutine(this.r_startGenerateAndOrDisplay());
         }
-        private IEnumerator r_startDisplay()
+        private IEnumerator r_startGenerateAndOrDisplay()
         {
             if (!File.Exists(this.getSaveFileURI()))
             {
-                this._status = STATUS.GENERATING;
+                this._status = STATUS.WAITING_FOR_GENERATION;
                 this.logStatus();
                 yield return StartCoroutine(this.r_generate());
 
-                this._status = STATUS.DISPLAYING;
+                this._status = STATUS.WAITING_FOR_DISPLAY;
                 this.logStatus();
                 yield return StartCoroutine(this.r_display());
 
@@ -99,17 +107,22 @@ namespace Sygenap
             {
                 this.load();
 
-                this._status = STATUS.DISPLAYING;
+                this._status = STATUS.WAITING_FOR_DISPLAY;
                 this.logStatus();
                 yield return StartCoroutine(this.r_display());
 
                 this._status = STATUS.DISPLAYED;
                 this.logStatus();
             }
+
+            this.generateAndOrDisplayProcess = null;
         }
 
         private IEnumerator r_display()
         {
+            //TODO display buffering
+            this._status = STATUS.DISPLAYING;
+
             this._terrain = this.gameObject.AddComponent<Terrain>();
             this._terrain.materialTemplate = this.root.terrainMaterial;
             this._terrain.materialType = Terrain.MaterialType.Custom;
@@ -126,6 +139,15 @@ namespace Sygenap
 
         private IEnumerator r_generate()
         {
+            this.root.generationWaitingList.Add(this);
+            while (!this.root.generationBuffer.Contains(this))
+            {
+                yield return new WaitForSeconds(Parcel.GENERATION_BUFFER_FREQUENCY_CHECK);
+            }
+            this.root.generationWaitingList.Remove(this);
+
+            this._status = STATUS.GENERATING;
+
             //int heightsArrayDimension = Mathf.RoundToInt(Parcel.WIDTH * 512);
             int heightsArrayDimension = 33;
             this._terrainHeights = new float[heightsArrayDimension, heightsArrayDimension];
