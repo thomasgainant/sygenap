@@ -582,7 +582,11 @@ PrefabInstance:
       objectReference: {fileID: 2336372997970376079, guid: 50e81734ca75a2749b21b158ca73f2ad, type: 3}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: randomSeed
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: startingSeed
+      value: 123
       objectReference: {fileID: 0}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: terrainMaterial
@@ -594,7 +598,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: saveParcelsOnGeneration
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: PARCEL_TERRAIN_NOISE_PERLIN_ZOOM
@@ -602,6 +606,34 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: GENERATION_BUFFER_REFRESH_FREQUENCY
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[0].prefab
+      value: 
+      objectReference: {fileID: 726649394836488326, guid: d28046d1350efe74593b7f882464c6cb, type: 3}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[1].prefab
+      value: 
+      objectReference: {fileID: 3929116518651626790, guid: f9b6a86e1de49ce41bac6de03258b827, type: 3}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[0].maximumOccurence
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[0].minimumOccurence
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[1].maximumOccurence
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[1].minimumOccurence
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8425582911526314390, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}

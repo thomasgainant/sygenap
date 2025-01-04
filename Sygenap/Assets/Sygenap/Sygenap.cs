@@ -1,14 +1,14 @@
-using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Sygenap {
     public class Sygenap : MonoBehaviour
     {
+        private System.Random r;
+
         public string gameName;
 
         private int _seed = 1;
@@ -47,6 +47,8 @@ namespace Sygenap {
 
         public Material terrainMaterial;
 
+        public List<ParcelDecorRule> possibleDecorsForParcels = new List<ParcelDecorRule>();
+
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
@@ -66,12 +68,14 @@ namespace Sygenap {
                 Directory.CreateDirectory(this.getSaveFileDirectory());
 
                 if (this.randomSeed)
-                    this._seed = Random.Range(int.MinValue, int.MaxValue);
+                    this._seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
                 else
                     this._seed = this.startingSeed;
 
                 this.spawnPOV(Vector3.zero, Quaternion.identity);
             }
+
+            this.r = new System.Random(this._seed);
 
             StartCoroutine(this.r_handlePov());
             StartCoroutine(this.r_handleGenerationBuffer());
@@ -113,12 +117,12 @@ namespace Sygenap {
         }
 
         /*
-         * Gives a pseudo-random value between 0f and 1f (always gives the same value with the same seed)
+         * Gives a pseudo-random value between 0f and 1f
+         * Always gives the same value with the same seed
          */
-        public static float random(int seed, float pseudoRandom)
+        public float random()
         {
-            float maxPossibleValue = int.MaxValue;
-            return Mathf.Abs(seed / pseudoRandom) / maxPossibleValue;
+            return r.Next(0, 10000)/10000f;
         }
 
         /*
@@ -211,6 +215,7 @@ namespace Sygenap {
 
                 if (this.generationWaitingList.Count > 0)
                 {
+                    //TODO decide which Parcels to generate first according to specific criteria (like distance, game design importance, etc.)
                     int maxNumberOfParcelToAdd = this.GENERATION_BUFFER_SIZE - this.generationBuffer.Count;
                     if (maxNumberOfParcelToAdd > this.generationWaitingList.Count)
                         maxNumberOfParcelToAdd = this.generationWaitingList.Count;

@@ -1,8 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Sygenap
 {
@@ -34,6 +34,8 @@ namespace Sygenap
         private Terrain _terrain;
         private float[,] _terrainHeights;
         private TerrainCollider _collider;
+
+        public List<Decor> decors = new List<Decor>();
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
@@ -192,6 +194,41 @@ namespace Sygenap
                 //Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
                 yield return null;
             }
+
+            yield return StartCoroutine(this.r_generateDecors());
+        }
+
+        private IEnumerator r_generateDecors()
+        {
+            foreach (ParcelDecorRule rule in this.root.possibleDecorsForParcels)
+            {
+                int numberOfInstances = rule.minimumOccurence + Mathf.RoundToInt((rule.maximumOccurence - rule.minimumOccurence) * this.root.random());
+
+                for (int i = 0; i < numberOfInstances; i++)
+                {
+                    GameObject newInstanceObj = Instantiate(rule.prefab);
+                    Vector3 newInstancePosition = this.getOrigin() + new Vector3(
+                        this.root.PARCEL_WIDTH * this.root.random(),
+                        0f,
+                        this.root.PARCEL_WIDTH * this.root.random()
+                    );
+                    newInstanceObj.transform.position = newInstancePosition;
+                    newInstanceObj.transform.SetParent(this.transform);
+
+                    Decor newDecor = newInstanceObj.AddComponent<Decor>();
+                    this.addDecor(newDecor);
+                }
+
+                yield return null;
+            }
+        }
+
+        public void addDecor(Decor decor)
+        {
+            decor.root = this.root;
+            decor.parent = this;
+
+            this.decors.Add(decor);
         }
 
         public void hide()
@@ -225,7 +262,7 @@ namespace Sygenap
             if (File.Exists(destination)) file = File.OpenWrite(destination);
             else file = File.Create(destination);
 
-            ParcelData data = new ParcelData(this._x, this._y, this._terrainHeights);
+            ParcelData data = new ParcelData(this._x, this._y, this._terrainHeights, this.decors);
 
             BinaryFormatter bf = new BinaryFormatter();
             bf.Serialize(file, data);
@@ -251,7 +288,18 @@ namespace Sygenap
             this._x = data.x;
             this._y = data.y;
             this._terrainHeights = data.heights;
+
+            //TODO unserialize DecorData to Decors
         }
+    }
+
+    [System.Serializable]
+    public class ParcelDecorRule
+    {
+        public GameObject prefab;
+
+        public int minimumOccurence = 1;
+        public int maximumOccurence = 1;
     }
 
     [System.Serializable]
@@ -262,11 +310,19 @@ namespace Sygenap
 
         public float[,] heights;
 
-        public ParcelData(int x, int y, float[,] heights) {
+        public List<DecorData> decors;
+
+        public ParcelData(int x, int y, float[,] heights, List<Decor> boundDecors) {
             this.x = x;
             this.y = y;
 
             this.heights = heights;
+
+            this.decors = new List<DecorData> ();
+            foreach (Decor boundDecor in boundDecors)
+            {
+                this.decors.Add(boundDecor.serialize());
+            }
         }
     }
 }
