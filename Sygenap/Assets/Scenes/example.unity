@@ -581,6 +581,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2336372997970376079, guid: 50e81734ca75a2749b21b158ca73f2ad, type: 3}
     - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: randomSeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: terrainMaterial
       value: 
       objectReference: {fileID: 2100000, guid: 49a29f60982e4aa469cf73da468118d8, type: 2}

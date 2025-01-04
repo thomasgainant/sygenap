@@ -154,11 +154,13 @@ namespace Sygenap
 
             //Generate noise on terrain
             float noiseGenerationPercent = 0f;
+            //Gives a pseudo-random offset to every Parcels, according to the the seed
+            //with reducing the seed to a value really smaller to its maximum value
+            //in order to avoid memory overload on the following vector operations
             Vector2 seedPerlinCoordinatesOffset = new Vector2(
-                this.root.seed * 5f,
-                this.root.seed * 3f
+                this.root.seed / (int.MaxValue/5f),
+                this.root.seed / (int.MaxValue / 3f)
             );
-            //Debug.Log(seedPerlinCoordinatesOffset);
             for (int pointX = 0; pointX < heightsArrayDimension; pointX++)
             {
                 for (int pointZ = 0; pointZ < heightsArrayDimension; pointZ++)
@@ -178,9 +180,7 @@ namespace Sygenap
                     perlinCoordinates = perlinCoordinates + parcelPerlinCoordinatesOffset;
 
                     //offset from seed
-                    //perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
-                    Debug.Log(perlinCoordinates);
-                    Debug.Log("*");
+                    perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
 
                     //zoom on perlin noise
                     //perlinX *= Parcel.TERRAIN_NOISE_PERLIN_ZOOM;
@@ -195,7 +195,7 @@ namespace Sygenap
                     noiseGenerationPercent = ((pointX*heightsArrayDimension)+pointZ) / (heightsArrayDimension * heightsArrayDimension * 1f);
                 }
 
-                Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
+                //Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
                 yield return null;
             }
         }

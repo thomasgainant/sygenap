@@ -9,6 +9,8 @@ using UnityEngine.UIElements;
 namespace Sygenap {
     public class Sygenap : MonoBehaviour
     {
+        public string gameName;
+
         private int _seed = 1;
         public int seed
         {
@@ -18,15 +20,15 @@ namespace Sygenap {
             }
         }
 
-        private bool randomSeed = true;
-        public bool saveParcelsOnGeneration = true;
+        public int startingSeed = 1;
+        public bool randomSeed = true;
 
-        public string gameName;
+        public bool saveParcelsOnGeneration = true;
 
         public List<Parcel> parcels = new List<Parcel>();
 
-        public static int GENERATION_BUFFER_SIZE = 3;
-        public static float GENERATION_BUFFER_REFRESH_FREQUENCY = 1f; //In seconds
+        public static int GENERATION_BUFFER_SIZE = 1;
+        public static float GENERATION_BUFFER_REFRESH_FREQUENCY = 10f; //In seconds
         public List<Parcel> generationWaitingList = new List<Parcel>();
         public List<Parcel> generationBuffer = new List<Parcel>();
 
@@ -61,6 +63,8 @@ namespace Sygenap {
 
                 if (this.randomSeed)
                     this._seed = Random.Range(int.MinValue, int.MaxValue);
+                else
+                    this._seed = this.startingSeed;
 
                 this.spawnPOV(Vector3.zero, Quaternion.identity);
             }
