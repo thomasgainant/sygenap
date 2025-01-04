@@ -119,16 +119,19 @@ namespace Sygenap
             //TODO display buffering
             this._status = STATUS.DISPLAYING;
 
-            this._terrain = this.gameObject.AddComponent<Terrain>();
-            this._terrain.materialTemplate = this.root.terrainMaterial;
-            this._terrain.materialType = Terrain.MaterialType.Custom;
+            if (this.root.shouldGenerateTerrain)
+            {
+                this._terrain = this.gameObject.AddComponent<Terrain>();
+                this._terrain.materialTemplate = this.root.terrainMaterial;
+                this._terrain.materialType = Terrain.MaterialType.Custom;
 
-            _terrain.terrainData = new TerrainData();
-            _terrain.terrainData.size = new Vector3(this.root.PARCEL_WIDTH, this.root.PARCEL_MAX_HEIGHT, this.root.PARCEL_WIDTH);
-            _terrain.terrainData.SetHeights(0, 0, this._terrainHeights);
+                _terrain.terrainData = new TerrainData();
+                _terrain.terrainData.size = new Vector3(this.root.PARCEL_WIDTH, this.root.PARCEL_MAX_HEIGHT, this.root.PARCEL_WIDTH);
+                _terrain.terrainData.SetHeights(0, 0, this._terrainHeights);
 
-            this._collider = this.gameObject.AddComponent<TerrainCollider>();
-            this._collider.terrainData = _terrain.terrainData;
+                this._collider = this.gameObject.AddComponent<TerrainCollider>();
+                this._collider.terrainData = _terrain.terrainData;
+            }
 
             yield return null;
         }
@@ -144,55 +147,58 @@ namespace Sygenap
 
             this._status = STATUS.GENERATING;
 
-            //int heightsArrayDimension = Mathf.RoundToInt(Parcel.WIDTH * 512);
-            int heightsArrayDimension = 33;
-            this._terrainHeights = new float[heightsArrayDimension, heightsArrayDimension];
-
-            //Generate noise on terrain
-            float noiseGenerationPercent = 0f;
-            //Gives a pseudo-random offset to every Parcels, according to the the seed
-            //with reducing the seed to a value really smaller to its maximum value
-            //in order to avoid memory overload on the following vector operations
-            Vector2 seedPerlinCoordinatesOffset = new Vector2(
-                this.root.seed / (int.MaxValue/5f),
-                this.root.seed / (int.MaxValue / 3f)
-            );
-            for (int pointX = 0; pointX < heightsArrayDimension; pointX++)
+            if (this.root.shouldGenerateTerrain)
             {
-                for (int pointZ = 0; pointZ < heightsArrayDimension; pointZ++)
+                //int heightsArrayDimension = Mathf.RoundToInt(Parcel.WIDTH * 512);
+                int heightsArrayDimension = 33;
+                this._terrainHeights = new float[heightsArrayDimension, heightsArrayDimension];
+
+                //Generate noise on terrain
+                float noiseGenerationPercent = 0f;
+                //Gives a pseudo-random offset to every Parcels, according to the the seed
+                //with reducing the seed to a value really smaller to its maximum value
+                //in order to avoid memory overload on the following vector operations
+                Vector2 seedPerlinCoordinatesOffset = new Vector2(
+                    this.root.seed / (int.MaxValue / 5f),
+                    this.root.seed / (int.MaxValue / 3f)
+                );
+                for (int pointX = 0; pointX < heightsArrayDimension; pointX++)
                 {
-                    float noiseHeightValue = 0f;
+                    for (int pointZ = 0; pointZ < heightsArrayDimension; pointZ++)
+                    {
+                        float noiseHeightValue = 0f;
 
-                    Vector2 perlinCoordinates = new Vector2(
-                        pointX / (heightsArrayDimension - 1f),
-                        pointZ / (heightsArrayDimension - 1f)
-                    );
+                        Vector2 perlinCoordinates = new Vector2(
+                            pointX / (heightsArrayDimension - 1f),
+                            pointZ / (heightsArrayDimension - 1f)
+                        );
 
-                    //parcel offset in world
-                    Vector2 parcelPerlinCoordinatesOffset = new Vector2(
-                        this._x * 1f,
-                        this._y * 1f
-                    );
-                    perlinCoordinates = perlinCoordinates + parcelPerlinCoordinatesOffset;
+                        //parcel offset in world
+                        Vector2 parcelPerlinCoordinatesOffset = new Vector2(
+                            this._x * 1f,
+                            this._y * 1f
+                        );
+                        perlinCoordinates = perlinCoordinates + parcelPerlinCoordinatesOffset;
 
-                    //offset from seed
-                    perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
+                        //offset from seed
+                        perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
 
-                    //zoom on perlin noise
-                    perlinCoordinates.x *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
-                    perlinCoordinates.y *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
+                        //zoom on perlin noise
+                        perlinCoordinates.x *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
+                        perlinCoordinates.y *= this.root.PARCEL_TERRAIN_NOISE_PERLIN_ZOOM;
 
-                    noiseHeightValue = Mathf.PerlinNoise(perlinCoordinates.x, perlinCoordinates.y);
+                        noiseHeightValue = Mathf.PerlinNoise(perlinCoordinates.x, perlinCoordinates.y);
 
-                    //using max noise height
-                    noiseHeightValue *= this.root.PARCEL_TERRAIN_NOISE_MAX_HEIGHT/this.root.PARCEL_MAX_HEIGHT;
+                        //using max noise height
+                        noiseHeightValue *= this.root.PARCEL_TERRAIN_NOISE_MAX_HEIGHT / this.root.PARCEL_MAX_HEIGHT;
 
-                    this._terrainHeights[pointZ, pointX] += noiseHeightValue;
-                    noiseGenerationPercent = ((pointX*heightsArrayDimension)+pointZ) / (heightsArrayDimension * heightsArrayDimension * 1f);
+                        this._terrainHeights[pointZ, pointX] += noiseHeightValue;
+                        noiseGenerationPercent = ((pointX * heightsArrayDimension) + pointZ) / (heightsArrayDimension * heightsArrayDimension * 1f);
+                    }
+
+                    //Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
+                    yield return null;
                 }
-
-                //Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
-                yield return null;
             }
 
             yield return StartCoroutine(this.r_generateDecors());
@@ -207,11 +213,18 @@ namespace Sygenap
                 for (int i = 0; i < numberOfInstances; i++)
                 {
                     GameObject newInstanceObj = Instantiate(rule.prefab);
-                    Vector3 newInstancePosition = this.getOrigin() + new Vector3(
-                        this.root.PARCEL_WIDTH * this.root.random(),
-                        0f,
-                        this.root.PARCEL_WIDTH * this.root.random()
-                    );
+                    Vector3 newInstancePosition;
+                    if (rule.shouldBePlacedRandomly) {
+                        newInstancePosition = this.getOrigin() + new Vector3(
+                            this.root.PARCEL_WIDTH * this.root.random(),
+                            0f,
+                            this.root.PARCEL_WIDTH * this.root.random()
+                        );
+                    }
+                    else
+                    {
+                        newInstancePosition = this.getOrigin();
+                    }
                     newInstanceObj.transform.position = newInstancePosition;
                     newInstanceObj.transform.SetParent(this.transform);
 
@@ -300,6 +313,8 @@ namespace Sygenap
 
         public int minimumOccurence = 1;
         public int maximumOccurence = 1;
+
+        public bool shouldBePlacedRandomly = true;
     }
 
     [System.Serializable]

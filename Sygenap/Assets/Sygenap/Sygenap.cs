@@ -23,6 +23,7 @@ namespace Sygenap {
         public int startingSeed = 1;
         public bool randomSeed = true;
 
+        public bool shouldGenerateTerrain = true;
         public bool saveParcelsOnGeneration = true;
 
         public float PARCEL_WIDTH = 10f;
