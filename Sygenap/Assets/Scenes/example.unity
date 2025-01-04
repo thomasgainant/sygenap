@@ -584,6 +584,10 @@ PrefabInstance:
       propertyPath: terrainMaterial
       value: 
       objectReference: {fileID: 2100000, guid: 49a29f60982e4aa469cf73da468118d8, type: 2}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: saveParcelsOnGeneration
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8425582911526314390, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: m_Name
       value: Sygenap

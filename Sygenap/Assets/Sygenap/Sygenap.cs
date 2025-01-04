@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace Sygenap {
     public class Sygenap : MonoBehaviour
     {
-        private int _seed;
+        private int _seed = 1;
         public int seed
         {
             get
@@ -19,6 +19,7 @@ namespace Sygenap {
         }
 
         private bool randomSeed = true;
+        public bool saveParcelsOnGeneration = true;
 
         public string gameName;
 
@@ -102,7 +103,8 @@ namespace Sygenap {
          */
         public static float random(int seed, float pseudoRandom)
         {
-            return Mathf.Abs(seed / pseudoRandom) / Mathf.Abs(seed);
+            float maxPossibleValue = int.MaxValue;
+            return Mathf.Abs(seed / pseudoRandom) / maxPossibleValue;
         }
 
         /*

@@ -11,6 +11,9 @@ namespace Sygenap
         public static float WIDTH = 10f;
         public static float MAX_HEIGHT = 5f;
 
+        public static float TERRAIN_NOISE_PERLIN_ZOOM = 0.03f;
+        public static float TERRAIN_NOISE_MAX_HEIGHT = 3f; //Noise height, in meters
+
         public Sygenap root;
 
         private int _x; //Coordinate in X times WIDTH
@@ -89,7 +92,8 @@ namespace Sygenap
                 this._status = STATUS.DISPLAYED;
                 this.logStatus();
 
-                this.save();
+                if(this.root.saveParcelsOnGeneration)
+                    this.save();
             }
             else
             {
@@ -128,16 +132,45 @@ namespace Sygenap
 
             //Generate noise on terrain
             float noiseGenerationPercent = 0f;
-            for (int x = 0; x < heightsArrayDimension; x++)
+            Vector2 seedPerlinCoordinatesOffset = new Vector2(
+                this.root.seed * 5f,
+                this.root.seed * 3f
+            );
+            //Debug.Log(seedPerlinCoordinatesOffset);
+            for (int pointX = 0; pointX < heightsArrayDimension; pointX++)
             {
-                for (int z = 0; z < heightsArrayDimension; z++)
+                for (int pointZ = 0; pointZ < heightsArrayDimension; pointZ++)
                 {
                     float heightValue = 0f;
 
-                    heightValue = Mathf.PerlinNoise(x / (heightsArrayDimension * 1f), z / (heightsArrayDimension * 1f)); //TODO using max noise height + parcel offset in world + zoom on perlin noise + offset from seed
+                    Vector2 perlinCoordinates = new Vector2(
+                        pointX / (heightsArrayDimension - 1f),
+                        pointZ / (heightsArrayDimension - 1f)
+                    );
 
-                    this._terrainHeights[z, x] = heightValue;
-                    noiseGenerationPercent = ((x*heightsArrayDimension)+z) / (heightsArrayDimension * heightsArrayDimension * 1f);
+                    //parcel offset in world
+                    Vector2 parcelPerlinCoordinatesOffset = new Vector2(
+                        this._x * 1f,
+                        this._y * 1f
+                    );
+                    perlinCoordinates = perlinCoordinates + parcelPerlinCoordinatesOffset;
+
+                    //offset from seed
+                    //perlinCoordinates = perlinCoordinates + seedPerlinCoordinatesOffset;
+                    Debug.Log(perlinCoordinates);
+                    Debug.Log("*");
+
+                    //zoom on perlin noise
+                    //perlinX *= Parcel.TERRAIN_NOISE_PERLIN_ZOOM;
+                    //perlinY *= Parcel.TERRAIN_NOISE_PERLIN_ZOOM;
+
+                    heightValue = Mathf.PerlinNoise(perlinCoordinates.x, perlinCoordinates.y);
+
+                    //using max noise height
+                    //heightValue *= Parcel.TERRAIN_NOISE_MAX_HEIGHT/Parcel.MAX_HEIGHT;
+
+                    this._terrainHeights[pointZ, pointX] = heightValue;
+                    noiseGenerationPercent = ((pointX*heightsArrayDimension)+pointZ) / (heightsArrayDimension * heightsArrayDimension * 1f);
                 }
 
                 Debug.Log("Parcel " + this._x + ", " + this._y + " - Generating noise... " + (noiseGenerationPercent*100f)+"%");
