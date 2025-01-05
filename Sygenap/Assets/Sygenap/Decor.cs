@@ -6,6 +6,7 @@ namespace Sygenap
     {
         public Sygenap root;
         public Parcel parent;
+        public string uri;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
@@ -21,7 +22,7 @@ namespace Sygenap
 
         public DecorData serialize()
         {
-            return new DecorData(this.transform.position);
+            return new DecorData(this.transform.position, this.uri);
         }
     }
 
@@ -32,11 +33,15 @@ namespace Sygenap
         public float positionY;
         public float positionZ;
 
-        public DecorData(Vector3 position)
+        public string uri;
+
+        public DecorData(Vector3 position, string uriInProject)
         {
             this.positionX = position.x;
             this.positionY = position.y;
             this.positionZ = position.z;
+
+            this.uri = uriInProject;
         }
     }
 }

@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using UnityEditor;
 using UnityEngine;
 
 namespace Sygenap
@@ -213,33 +215,35 @@ namespace Sygenap
                 for (int i = 0; i < numberOfInstances; i++)
                 {
                     GameObject newInstanceObj = Instantiate(rule.prefab);
-                    Vector3 newInstancePosition;
-                    if (rule.shouldBePlacedRandomly) {
-                        newInstancePosition = this.getOrigin() + new Vector3(
-                            this.root.PARCEL_WIDTH * this.root.random(),
-                            0f,
-                            this.root.PARCEL_WIDTH * this.root.random()
-                        );
-                    }
-                    else
-                    {
-                        newInstancePosition = this.getOrigin();
-                    }
-                    newInstanceObj.transform.position = newInstancePosition;
-                    newInstanceObj.transform.SetParent(this.transform);
-
                     Decor newDecor = newInstanceObj.AddComponent<Decor>();
-                    this.addDecor(newDecor);
+                    this.registerDecor(newDecor, rule.shouldBePlacedRandomly, AssetDatabase.GetAssetPath(rule.prefab));
                 }
 
                 yield return null;
             }
         }
 
-        public void addDecor(Decor decor)
+        public void registerDecor(Decor decor, bool shouldBePlacedRandomly, string uriInProject)
         {
+            Vector3 newInstancePosition;
+            if (shouldBePlacedRandomly)
+            {
+                newInstancePosition = this.getOrigin() + new Vector3(
+                    this.root.PARCEL_WIDTH * this.root.random(),
+                    0f,
+                    this.root.PARCEL_WIDTH * this.root.random()
+                );
+            }
+            else
+            {
+                newInstancePosition = this.getOrigin();
+            }
+            decor.gameObject.transform.position = newInstancePosition;
+            decor.gameObject.transform.SetParent(this.transform);
+
             decor.root = this.root;
             decor.parent = this;
+            decor.uri = uriInProject;
 
             this.decors.Add(decor);
         }
@@ -302,7 +306,15 @@ namespace Sygenap
             this._y = data.y;
             this._terrainHeights = data.heights;
 
-            //TODO unserialize DecorData to Decors
+            //unserialize DecorData to Decors
+            foreach(DecorData decorData in data.decors)
+            {
+                GameObject newInstanceObj = Instantiate(AssetDatabase.LoadAssetAtPath(decorData.uri, typeof(GameObject))) as GameObject;
+                Decor newDecor = newInstanceObj.AddComponent<Decor>();
+                this.registerDecor(newDecor, false, decorData.uri);
+
+                newInstanceObj.transform.position = new Vector3(decorData.positionX, decorData.positionY, decorData.positionZ);
+            }
         }
     }
 

@@ -636,6 +636,14 @@ PrefabInstance:
       propertyPath: possibleDecorsForParcels.Array.data[1].minimumOccurence
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[0].shouldBePlacedRandomly
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7417985714684156909, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
+      propertyPath: possibleDecorsForParcels.Array.data[1].shouldBePlacedRandomly
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8425582911526314390, guid: 063bfcfce2e726b4ea5bea72e1a221b3, type: 3}
       propertyPath: m_Name
       value: Sygenap
